@@ -19,7 +19,10 @@ package accounts
 import (
 	"context"
 
+	"github.com/coinbase-samples/advanced-trade-sdk-go/client"
 	"github.com/coinbase-samples/advanced-trade-sdk-go/model"
+	"github.com/coinbase-samples/advanced-trade-sdk-go/utils"
+	"github.com/coinbase-samples/core-go"
 )
 
 type ListAccountsRequest struct {
@@ -33,7 +36,7 @@ type ListAccountsResponse struct {
 	Pagination *model.Pagination
 }
 
-func (c Client) ListAccounts(
+func (s accountsServiceImpl) ListAccounts(
 	ctx context.Context,
 	request *ListAccountsRequest,
 ) (*ListAccountsResponse, error) {
@@ -45,7 +48,16 @@ func (c Client) ListAccounts(
 
 	response := &ListAccountsResponse{Request: request}
 
-	if err := core.HttpGet(ctx, c, path, queryParams, request, response); err != nil {
+	if err := core.HttpGet(
+		ctx,
+		s.client,
+		path,
+		queryParams,
+		client.DefaultSuccessHttpStatusCodes,
+		request,
+		response,
+		s.client.HeadersFunc(),
+	); err != nil {
 		return nil, err
 	}
 

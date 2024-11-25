@@ -20,7 +20,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/coinbase-samples/advanced-trade-sdk-go/client"
 	"github.com/coinbase-samples/advanced-trade-sdk-go/model"
+	"github.com/coinbase-samples/core-go"
 )
 
 type GetAccountRequest struct {
@@ -32,7 +34,7 @@ type GetAccountResponse struct {
 	Request  *GetAccountRequest `json:"request"`
 }
 
-func (c Client) GetAccount(
+func (s accountsServiceImpl) GetAccount(
 	ctx context.Context,
 	request *GetAccountRequest,
 ) (*GetAccountResponse, error) {
@@ -41,7 +43,16 @@ func (c Client) GetAccount(
 
 	response := &GetAccountResponse{Request: request}
 
-	if err := get(ctx, c, path, emptyQueryParams, request, response); err != nil {
+	if err := core.HttpGet(
+		ctx,
+		s.client,
+		path,
+		core.EmptyQueryParams,
+		client.DefaultSuccessHttpStatusCodes,
+		request,
+		response,
+		s.client.HeadersFunc(),
+	); err != nil {
 		return nil, err
 	}
 
