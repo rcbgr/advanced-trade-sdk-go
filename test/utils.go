@@ -18,16 +18,22 @@ package test
 
 import (
 	"encoding/json"
-	adv "github.com/coinbase-samples/advanced-trade-sdk-go"
-	"net/http"
 	"os"
+
+	"github.com/coinbase-samples/advanced-trade-sdk-go/client"
+	"github.com/coinbase-samples/advanced-trade-sdk-go/credentials"
 )
 
-func setupClient() (*adv.Client, error) {
-	credentials := &adv.Credentials{}
+func setupClient() (client.RestClient, error) {
+	credentials := &credentials.Credentials{}
 	if err := json.Unmarshal([]byte(os.Getenv("ADV_CREDENTIALS")), credentials); err != nil {
 		return nil, err
 	}
-	client := adv.NewClient(credentials, http.Client{})
-	return client, nil
+
+	httpClient, err := client.DefaultHttpClient()
+	if err != nil {
+		return nil, err
+	}
+	restClient := client.NewRestClient(credentials, httpClient)
+	return restClient, nil
 }
