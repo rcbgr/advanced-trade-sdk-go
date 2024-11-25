@@ -1,6 +1,6 @@
 module github.com/coinbase-samples/advanced-trade-sdk-go
 
-go 1.21.4
+go 1.19
 
 require (
 	github.com/coinbase-samples/core-go v0.2.0
