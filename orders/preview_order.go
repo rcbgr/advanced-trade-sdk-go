@@ -66,7 +66,7 @@ func (s ordersServiceImpl) CreateOrderPreview(
 
 	response := &CreateOrderPreviewResponse{Request: request}
 
-	if err := core.HttpGet(
+	if err := core.HttpPost(
 		ctx,
 		s.client,
 		path,
