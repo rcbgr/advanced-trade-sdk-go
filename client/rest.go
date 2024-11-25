@@ -129,3 +129,7 @@ func generateJwt(method, path, host, keyName, privateKeyPEM string) string {
 
 	return signedToken
 }
+
+func DefaultHttpClient() (http.Client, error) {
+	return core.DefaultHttpClient()
+}
