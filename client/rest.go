@@ -45,6 +45,15 @@ type RestClient interface {
 	HeadersFunc() core.HttpHeaderFunc
 }
 
+func NewRestClient(credentials *credentials.Credentials, httpClient http.Client) RestClient {
+	return &restClientImpl{
+		credentials: credentials,
+		httpClient:  httpClient,
+		baseUrl:     defaultV3ApiBaseUrl,
+		headersFunc: defaultHeadersFunc,
+	}
+}
+
 type restClientImpl struct {
 	httpClient  http.Client
 	credentials *credentials.Credentials
@@ -76,14 +85,6 @@ func (c *restClientImpl) SetHeadersFunc(hf core.HttpHeaderFunc) RestClient {
 
 func (c *restClientImpl) HeadersFunc() core.HttpHeaderFunc {
 	return c.headersFunc
-}
-
-func NewRestClient(credentials *credentials.Credentials, httpClient http.Client) RestClient {
-	return &restClientImpl{
-		credentials: credentials,
-		httpClient:  httpClient,
-		baseUrl:     defaultV3ApiBaseUrl,
-	}
 }
 
 func AddAdvancedHttpHeaders(req *http.Request, path string, body []byte, cl core.RestClient, t time.Time) {
