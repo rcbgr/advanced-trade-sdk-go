@@ -18,7 +18,9 @@ package test
 
 import (
 	"context"
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/coinbase-samples/advanced-trade-sdk-go/portfolios"
 )
@@ -32,7 +34,7 @@ func TestCreatePortfolio(t *testing.T) {
 	service := portfolios.NewPortfoliosService(client)
 
 	response, err := service.CreatePortfolio(context.Background(), &portfolios.CreatePortfolioRequest{
-		Name: "test_portfolio11111",
+		Name: fmt.Sprintf("test_portfolio-%d", time.Now().Unix()),
 	})
 
 	if err != nil {
