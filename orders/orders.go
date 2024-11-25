@@ -17,10 +17,21 @@
 package orders
 
 import (
+	"context"
+
 	"github.com/coinbase-samples/advanced-trade-sdk-go/client"
 )
 
 type OrdersService interface {
+	CancelOrders(ctx context.Context, request *CancelOrdersRequest) (*CancelOrdersResponse, error)
+	ClosePosition(ctx context.Context, request *ClosePositionRequest) (*ClosePositionResponse, error)
+	CreateOrder(ctx context.Context, request *CreateOrderRequest) (*CreateOrderResponse, error)
+	EditOrder(ctx context.Context, request *EditOrderRequest) (*EditOrderResponse, error)
+	GetOrder(ctx context.Context, request *GetOrderRequest) (*GetOrderResponse, error)
+	ListFills(ctx context.Context, request *ListFillsRequest) (*ListFillsResponse, error)
+	ListOrders(ctx context.Context, request *ListOrdersRequest) (*ListOrdersResponse, error)
+	PreviewEditOrder(ctx context.Context, request *PreviewEditOrderRequest) (*PreviewEditOrderResponse, error)
+	CreateOrderPreview(ctx context.Context, request *CreateOrderPreviewRequest) (*CreateOrderPreviewResponse, error)
 }
 
 func NewOrdersService(c client.RestClient) OrdersService {
