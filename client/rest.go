@@ -17,31 +17,46 @@
 package client
 
 import (
+	"crypto/x509"
+	"encoding/pem"
+	"fmt"
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/coinbase-samples/advanced-trade-sdk-go/credentials"
+	"github.com/coinbase-samples/core-go"
+	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 )
 
 var defaultV3ApiBaseUrl = "https://api.coinbase.com/api/v3"
 
+var DefaultSuccessHttpStatusCodes = []int{http.StatusOK}
+
+var defaultHeadersFunc = AddAdvancedHttpHeaders
+
 type RestClient interface {
-	SetBaseUrl(u string) RestClient
-	BaseUrl() string
+	SetHttpBaseUrl(u string) RestClient
+	HttpBaseUrl() string
 	HttpClient() *http.Client
 	Credentials() *credentials.Credentials
+	SetHeadersFunc(hf core.HttpHeaderFunc) RestClient
+	HeadersFunc() core.HttpHeaderFunc
 }
 
 type restClientImpl struct {
 	httpClient  http.Client
 	credentials *credentials.Credentials
+	headersFunc core.HttpHeaderFunc
 	baseUrl     string
 }
 
-func (c *restClientImpl) BaseUrl() string {
+func (c *restClientImpl) HttpBaseUrl() string {
 	return c.baseUrl
 }
 
-func (c *restClientImpl) SetBaseUrl(u string) RestClient {
+func (c *restClientImpl) SetHttpBaseUrl(u string) RestClient {
 	c.baseUrl = u
 	return c
 }
@@ -54,10 +69,63 @@ func (c *restClientImpl) Credentials() *credentials.Credentials {
 	return c.credentials
 }
 
+func (c *restClientImpl) SetHeadersFunc(hf core.HttpHeaderFunc) RestClient {
+	c.headersFunc = hf
+	return c
+}
+
+func (c *restClientImpl) HeadersFunc() core.HttpHeaderFunc {
+	return c.headersFunc
+}
+
 func NewRestClient(credentials *credentials.Credentials, httpClient http.Client) RestClient {
 	return &restClientImpl{
 		credentials: credentials,
 		httpClient:  httpClient,
 		baseUrl:     defaultV3ApiBaseUrl,
 	}
+}
+
+func AddAdvancedHttpHeaders(req *http.Request, path string, body []byte, cl core.RestClient, t time.Time) {
+
+	c := cl.(*restClientImpl)
+
+	jwtToken := generateJwt(req.Method, path, req.Host, c.Credentials().AccessKey, c.Credentials().PrivatePemKey)
+
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", jwtToken))
+
+}
+
+func generateJwt(method, path, host, keyName, privateKeyPEM string) string {
+	keyBytes := []byte(privateKeyPEM)
+	block, _ := pem.Decode(keyBytes)
+	if block == nil {
+		log.Fatal("failed to parse PEM block containing the key")
+	}
+
+	privateKey, err := x509.ParseECPrivateKey(block.Bytes)
+	if err != nil {
+		log.Fatalf("failed to parse EC private key: %v", err)
+	}
+
+	now := time.Now()
+	claims := jwt.MapClaims{
+		"sub": keyName,
+		"iss": "coinbase-cloud",
+		"nbf": now.Unix(),
+		"exp": now.Add(2 * time.Minute).Unix(),
+		"uri": fmt.Sprintf("%s %s%s", method, host, path),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
+	token.Header["kid"] = keyName
+	token.Header["nonce"] = uuid.New().String()
+
+	signedToken, err := token.SignedString(privateKey)
+	if err != nil {
+		log.Fatalf("failed to sign token: %v", err)
+	}
+
+	return signedToken
 }
